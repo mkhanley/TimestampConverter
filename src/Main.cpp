@@ -21,6 +21,8 @@
 #include "PluginInterface.h"
 #include "ScintillaEditor.h"
 #include "menuCmdID.h"
+#include "Version.h"
+
 
 #include <iostream>
 #include <chrono>
@@ -42,7 +44,6 @@ static ScintillaEditor editor;
 static void executeTimestampConverter();
 static void showAbout();
 
-
 // The menu entries for the plugin
 static FuncItem menuItems[] = {
 	// name, function, 0, is_checked, shortcut
@@ -51,14 +52,18 @@ static FuncItem menuItems[] = {
 	{ L"About...", showAbout, 0, false, nullptr }
 };
 
+
 static void executeTimestampConverter() {
 	TCHAR buff[1024];
 	size_t currentWordLen = 1024;
 	bool suc = SendMessage(nppData._nppHandle, NPPM_GETCURRENTWORD, currentWordLen, (LPARAM)&buff);
-
-	uint64_t num = _ttoll(buff);
-	std::cout << num << "\n";
-
+	
+	wchar_t* err;
+	uint64_t num = wcstoll(buff, &err, 10);
+	if (*err) {
+		MessageBeep(MB_ICONWARNING);
+		return;
+	}
 
 	auto epoch = std::chrono::time_point<std::chrono::system_clock>();
 	std::chrono::microseconds since_epoch;
@@ -83,15 +88,23 @@ static void executeTimestampConverter() {
 	auto timestamp = epoch + since_epoch;
 	uint64_t nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(since_epoch).count() % 1000000000;
 
-	
 	std::stringstream ss;
 	std::string format = "%Y-%m-%d %H:%M:%S.";
 
 	std::time_t timestamp_c = std::chrono::system_clock::to_time_t(timestamp);
 	std::tm timstamp_tm = *std::localtime(&timestamp_c);
 
-	ss << "\n" << std::put_time(&timstamp_tm, format.c_str()) << std::setfill('0') << std::setw(9) << nanos;
-	editor.AddText(ss.str());
+	ss << num << " = " << std::put_time(&timstamp_tm, format.c_str()) << std::setfill('0') << std::setw(9) << nanos;
+
+	std::string str = ss.str();
+	std::wstring stemp = std::wstring(str.begin(), str.end());
+
+	int msgboxID = MessageBox(
+		NULL,
+		stemp.c_str(),
+		L"TimestampConverter",
+		MB_OK
+	);
 }
 
 static void showAbout() {
