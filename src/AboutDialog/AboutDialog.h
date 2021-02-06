@@ -1,6 +1,6 @@
 // This file is part of TimestampConverter.
 // 
-// Copyright (C)2021 mkhanley <john.smith@email.com>
+// Copyright (C)2021 mkhanley
 // 
 // TimestampConverter is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
