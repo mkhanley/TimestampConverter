@@ -65,4 +65,9 @@
       <UniqueIdentifier>{7b271ac2-506e-456c-a1cb-5b01150e073c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
+    <None Include="..\LICENSE" />
+    <None Include="..\README.md" />
+  </ItemGroup>
 </Project>

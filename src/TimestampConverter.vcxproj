@@ -233,6 +233,11 @@
     <ResourceCompile Include="AboutDialog\resource.rc" />
     <ResourceCompile Include="AboutDialog\Version.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
+    <None Include="..\LICENSE" />
+    <None Include="..\README.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -53,32 +53,20 @@ static FuncItem menuItems[] = {
 };
 
 
-static void executeTimestampConverter() {
-	TCHAR buff[1024];
-	size_t currentWordLen = 1024;
-	bool suc = SendMessage(nppData._nppHandle, NPPM_GETCURRENTWORD, currentWordLen, (LPARAM)&buff);
-	
-	wchar_t* err;
-	uint64_t num = wcstoll(buff, &err, 10);
-	if (*err) {
-		MessageBeep(MB_ICONWARNING);
-		return;
-	}
-
+std::string convertTimestamp(uint64_t timestampNumber, int len) {
 	auto epoch = std::chrono::time_point<std::chrono::system_clock>();
 	std::chrono::microseconds since_epoch;
-	int len = wcslen(buff);
 	if (len <= 10) {
 		// assume seconds
-		since_epoch = std::chrono::seconds(num);
+		since_epoch = std::chrono::seconds(timestampNumber);
 	}
 	else if (len == 13) {
 		//assume milliseconds
-		since_epoch = std::chrono::milliseconds(num);
+		since_epoch = std::chrono::milliseconds(timestampNumber);
 	}
 	else if (len == 16) {
 		// assume microseconds
-		since_epoch = std::chrono::microseconds(num);
+		since_epoch = std::chrono::microseconds(timestampNumber);
 	}
 	else if (len == 19) {
 		// assume nanoseconds
@@ -94,17 +82,29 @@ static void executeTimestampConverter() {
 	std::time_t timestamp_c = std::chrono::system_clock::to_time_t(timestamp);
 	std::tm timstamp_tm = *std::localtime(&timestamp_c);
 
-	ss << num << " = " << std::put_time(&timstamp_tm, format.c_str()) << std::setfill('0') << std::setw(9) << nanos;
+	ss << std::put_time(&timstamp_tm, format.c_str()) << std::setfill('0') << std::setw(9) << nanos;
 
-	std::string str = ss.str();
-	std::wstring stemp = std::wstring(str.begin(), str.end());
+	return ss.str();
+}
 
-	int msgboxID = MessageBox(
-		NULL,
-		stemp.c_str(),
-		L"TimestampConverter",
-		MB_OK
-	);
+
+static void executeTimestampConverter() {
+	TCHAR buff[1024];
+	size_t currentWordLen = 1024;
+	bool suc = SendMessage(nppData._nppHandle, NPPM_GETCURRENTWORD, currentWordLen, (LPARAM)&buff);
+	auto line = SendMessage(nppData._nppHandle, NPPM_GETCURRENTLINE, 0, 0);
+
+	wchar_t* err;
+	uint64_t num = wcstoll(buff, &err, 10);
+	if (*err) {
+		MessageBeep(MB_ICONWARNING);
+		return;
+	}
+
+	std::string str = convertTimestamp(num, wcslen(buff));
+
+	editor.AnnotationSetText(line, str);
+	editor.AnnotationSetVisible(ANNOTATION_BOXED);
 }
 
 static void showAbout() {
@@ -123,6 +123,15 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
 	// Handle notifications here
 	switch (notifyCode->nmhdr.code) {
 		case SCN_CHARADDED:
+			break;
+		case SCN_UPDATEUI:
+			if (notifyCode->updated == SC_UPDATE_SELECTION) {
+				std::cout << "Hello";
+
+			}
+			break;
+		case SCN_DOUBLECLICK:
+			std::cout << "";
 			break;
 	}
 
